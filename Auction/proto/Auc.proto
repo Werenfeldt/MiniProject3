@@ -18,6 +18,7 @@ message BidRequest{
 message BidResponse{
     string response = 1;
     string mssg = 2;
+    bool aucDone = 3;
 }
 
 message GetResult{
