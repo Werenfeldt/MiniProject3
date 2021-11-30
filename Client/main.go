@@ -13,7 +13,7 @@ import (
 
 var HighestBid int32
 var MyLastBid int32
-	
+
 func main() {
 	//connect to grpc server
 	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
@@ -27,15 +27,11 @@ func main() {
 
 	clientConfig(conn, conn2)
 
-
-	//message stream
-	fmt.Println("Client Node: ", HighestBid)
 }
 
 //sets name for client and status
 func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 
-	//reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Welcome to The Auction! \n")
 	fmt.Printf("Enter your id : ")
 	var input int
@@ -46,22 +42,26 @@ func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 	}
 	var tmp []Auction.AuctionClient
 	tmp = append(tmp, Auction.NewAuctionClient(conn), Auction.NewAuctionClient(conn2))
-	
+
 	//call ChatService to create a stream
-	clientObj := client {clientid: int64(input), aucClients: tmp}
-	
+	clientObj := client{clientid: int64(input), aucClients: tmp}
+
+	for _, v := range clientObj.aucClients {
+		fmt.Println("clients", v)
+
+	}
+
 	clientObj.Bid()
-	//ch.clientName = strings.Trim(name, "\r\n")
-	//ch.SendStatus()
+
 }
 
-type client struct{
-	clientid int64
+type client struct {
+	clientid   int64
 	aucClients []Auction.AuctionClient
-	mu   sync.Mutex
+	mu         sync.Mutex
 }
 
-func (client *client) Bid(){
+func (client *client) Bid() {
 	fmt.Printf("Enter your bid : ")
 	var bid int32
 	_, err := fmt.Scan(&bid)
@@ -69,43 +69,71 @@ func (client *client) Bid(){
 		log.Fatalf(" Failed to read from console :: %v", err)
 	}
 
-	if bid <= HighestBid {
-		fmt.Printf("Your bid must be higher than %v", HighestBid)
-	} else {
-		MyLastBid = bid
+	MyLastBid = bid
 
-		for _, v := range client.aucClients{
+	var BidResponse [2]*Auction.BidResponse
 
-			BidResponse, err := v.Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
-			
-			if err != nil {
-				log.Fatalf("Failed to call AuctionService :: %v", err)
-			}
-			if BidResponse.Response == "success" {
-				fmt.Printf("Your bid has been recieved")
-				client.Result()
-			} else if BidResponse.Response == "The Auction is done"{
-				fmt.Printf(BidResponse.Response)
-			} 
-		}	
+	for i := 0; i < len(client.aucClients); i++ {
+
+		BidResponse[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
+
+		if err != nil {
+			client.remove(i)
+		}
+
 	}
+
+	for i := 0; i < len(client.aucClients); i++ {
+
+		if BidResponse[i] != nil {
+			if BidResponse[i].Response == "success" {
+				fmt.Printf("Your bid has been recieved \n")
+				client.Result()
+			} else if BidResponse[i].Response == "Your bid needs to be higher than:" {
+				fmt.Printf(BidResponse[i].Response, "%v", BidResponse[i].Timestamp)
+				client.Bid()
+			} else if BidResponse[i].Response == "The Auction is done" {
+				fmt.Printf(BidResponse[i].Response)
+			}
+		}
+	}
+
 }
 
+func (client *client) Result() {
 
-func (client *client) Result(){
+	var HighestBidtmp *Auction.HighestResult
 
-	
-	HighestBid, err := client.aucClients[0].Result(context.Background(), &Auction.GetResult{Id: int32(client.clientid), GetResult: "What is the result"})
-	HighestBid2, err := client.aucClients[1].Result(context.Background(), &Auction.GetResult{Id: int32(client.clientid), GetResult: "What is the result"})
+	for i := 0; i < len(client.aucClients); i++ {
+		var err error
 
-	if err != nil {
-		log.Fatalf("Failed to call AuctionService :: %v", err)
+		HighestBidtmp, err = client.aucClients[i].Result(context.Background(), &Auction.GetResult{Id: int32(client.clientid), GetResult: "What is the result"})
+
+		if err != nil {
+			log.Fatalf("Failed to call AuctionService :: %v", err)
+
+		}
 	}
-	
-	fmt.Printf("The highest bid at the moment is: %v \n", HighestBid)
-	fmt.Printf("The highest bid at the moment is: %v \n", HighestBid2)
+
+	fmt.Printf("The highest bid at the moment is: %v \n", HighestBidtmp.Result)
+
+	HighestBid = HighestBidtmp.Result
+
+	for i := 0; i < len(client.aucClients); i++ {
+		var err error
+
+		Done, err := client.aucClients[i].Update(context.Background(), &Auction.UpdateRequest{ClientId: int32(client.clientid), AucDone: false})
+		if err != nil {
+			log.Fatalf("Failed to call AuctionService :: %v, %v", err, Done)
+
+		}
+	}
 
 	client.Bid()
 }
 
-
+func (client *client) remove(i int) {
+	client.aucClients[i] = client.aucClients[len(client.aucClients)-1]
+	client.aucClients = client.aucClients[:len(client.aucClients)-1]
+	return
+}
