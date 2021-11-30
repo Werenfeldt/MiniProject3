@@ -37,18 +37,18 @@ func (c *Auctionserver) Bid(ctx context.Context, in *pb.BidRequest) (*pb.BidResp
 			AucObject.clientId = in.Id
 			log.Printf("Bid is successful. \n Bid recieved from: %v. \n Bid is: %v \n", AucObject.clientId, AucObject.AuctionHighestBid)
 			mssg := "Your bid has been recieved \n"
-			return &pb.BidResponse{Response: "Success", Mssg: mssg}, nil
+			return &pb.BidResponse{Response: "Success", Mssg: mssg, AucDone: AuctionDone}, nil
 		} else {
 			AucObject.mu.Unlock()
 			log.Printf("Bid is unsuccessful. \n Bid recieved from: %v. \n Bid is: %v and needs to be higher than: %v \n", in.Id, in.Bid, AucObject.AuctionHighestBid)
 			mssg := "Your bid needs to be higher than:" + strconv.Itoa(int(AucObject.AuctionHighestBid)) + "\n"
 
-			return &pb.BidResponse{Response: "Exception", Mssg: mssg}, nil
+			return &pb.BidResponse{Response: "Exception", Mssg: mssg, AucDone: AuctionDone}, nil
 		}
 	} else {
 		log.Printf("The Auction is done. The winner is %v with the highest bid: %v", AucObject.clientId, AucObject.AuctionHighestBid)
 		mssg := "The Auction is done. The highest bid was: " + strconv.Itoa(int(AucObject.AuctionHighestBid)) + " and the winner was: " + strconv.Itoa(int(AucObject.clientId)) + "\n"
-		return &pb.BidResponse{Response: "Fail", Mssg: mssg}, nil
+		return &pb.BidResponse{Response: "Fail", Mssg: mssg, AucDone: AuctionDone}, nil
 	}
 	//AucObject.AuctionHighestBid
 

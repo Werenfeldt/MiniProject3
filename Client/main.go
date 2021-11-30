@@ -79,18 +79,17 @@ func (client *client) Bid() {
 
 		BidResponse[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
 
-		AucDone = BidResponse[i].aucDone
 		if err != nil {
 			client.remove(i)
 		}
 
 	}
 
-	for i := 0; i < len(client.aucClients); i++ {
-
-		if AucDone {
-			fmt.Printf(BidResponse[i].Mssg)
-		} else {
+	if BidResponse[0].AucDone {
+		fmt.Printf(BidResponse[0].Mssg)
+		return
+	} else {
+		for i := 0; i < len(client.aucClients); i++ {
 			if BidResponse[i] != nil {
 				if BidResponse[i].Response == "Success" {
 					fmt.Printf(BidResponse[i].Mssg)
