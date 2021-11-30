@@ -25,7 +25,9 @@ var AuctionDone bool
 
 func (c *Auctionserver) Bid(ctx context.Context, in *pb.BidRequest) (*pb.BidResponse, error) {
 
-	go timer()
+	if AucObject.AuctionHighestBid == 0 {
+		go timer()
+	}
 
 	fmt.Printf("Server Id: %v \n Request from Client: %v \n", c.Id, in.Id)
 	if !AuctionDone {
@@ -33,16 +35,20 @@ func (c *Auctionserver) Bid(ctx context.Context, in *pb.BidRequest) (*pb.BidResp
 		if in.Bid > AucObject.AuctionHighestBid {
 			AucObject.AuctionHighestBid = in.Bid
 			AucObject.clientId = in.Id
-			return &pb.BidResponse{Response: "success"}, nil
+			log.Printf("Bid is successful. \n Bid recieved from: %v. \n Bid is: %v \n", AucObject.clientId, AucObject.AuctionHighestBid)
+			mssg := "Your bid has been recieved \n"
+			return &pb.BidResponse{Response: "Success", Mssg: mssg}, nil
 		} else {
 			AucObject.mu.Unlock()
-			mssg := "Your bid needs to be higher than:" + strconv.Itoa(int(AucObject.AuctionHighestBid))
+			log.Printf("Bid is unsuccessful. \n Bid recieved from: %v. \n Bid is: %v and needs to be higher than: %v \n", in.Id, in.Bid, AucObject.AuctionHighestBid)
+			mssg := "Your bid needs to be higher than:" + strconv.Itoa(int(AucObject.AuctionHighestBid)) + "\n"
 
-			return &pb.BidResponse{Response: mssg}, nil
+			return &pb.BidResponse{Response: "Exception", Mssg: mssg}, nil
 		}
 	} else {
-		mssg := "The Auction is done. The highest bid was: " + strconv.Itoa(int(AucObject.AuctionHighestBid)) + " and the winner was: " + strconv.Itoa(int(AucObject.clientId))
-		return &pb.BidResponse{Response: mssg}, nil
+		log.Printf("The Auction is done. The winner is %v with the highest bid: %v", AucObject.clientId, AucObject.AuctionHighestBid)
+		mssg := "The Auction is done. The highest bid was: " + strconv.Itoa(int(AucObject.AuctionHighestBid)) + " and the winner was: " + strconv.Itoa(int(AucObject.clientId)) + "\n"
+		return &pb.BidResponse{Response: "Fail", Mssg: mssg}, nil
 	}
 	//AucObject.AuctionHighestBid
 
@@ -52,23 +58,21 @@ func (c *Auctionserver) Result(ctx context.Context, in *pb.GetResult) (*pb.Highe
 
 	//c.AddClient(client{clientId: in.Id})
 	//fmt.Printf("Server Id: %v \n Request from Client: %v", c.Id, in.Id)
-
+	log.Printf("The current highest bid is: %v", AucObject.AuctionHighestBid)
 	return &pb.HighestResult{Result: AucObject.AuctionHighestBid}, nil
 }
 
-func (c *Auctionserver) Update(ctx context.Context, in *pb.UpdateRequest) (*pb.UpdateResponse, error) {
+func (c *Auctionserver) Done(ctx context.Context, in *pb.DoneRequest) (*pb.Empty, error) {
 	AucObject.mu.Unlock()
 
-	return &pb.UpdateResponse{Response: "success"}, nil
+	return &pb.Empty{}, nil
 }
 
 func timer() {
-	timer := time.AfterFunc(time.Minute, func() {
-		log.Println("Foo run for more than a minute.")
-		AuctionDone = true
-	})
 
-	defer timer.Stop()
+	time.Sleep(60 * time.Second)
+
+	AuctionDone = true
 
 	// Do heavy work
 }

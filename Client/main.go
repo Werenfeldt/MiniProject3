@@ -13,6 +13,7 @@ import (
 
 var HighestBid int32
 var MyLastBid int32
+var AucDone bool
 
 func main() {
 	//connect to grpc server
@@ -77,6 +78,7 @@ func (client *client) Bid() {
 
 		BidResponse[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
 
+		AucDone = BidResponse[i].aucDone
 		if err != nil {
 			client.remove(i)
 		}
@@ -85,15 +87,17 @@ func (client *client) Bid() {
 
 	for i := 0; i < len(client.aucClients); i++ {
 
-		if BidResponse[i] != nil {
-			if BidResponse[i].Response == "success" {
-				fmt.Printf("Your bid has been recieved \n")
-				client.Result()
-			} else if BidResponse[i].Response == "Your bid needs to be higher than:" {
-				fmt.Printf(BidResponse[i].Response, "%v", BidResponse[i].Timestamp)
-				client.Bid()
-			} else if BidResponse[i].Response == "The Auction is done" {
-				fmt.Printf(BidResponse[i].Response)
+		if AucDone {
+			fmt.Printf(BidResponse[i].Mssg)
+		} else {
+			if BidResponse[i] != nil {
+				if BidResponse[i].Response == "Success" {
+					fmt.Printf(BidResponse[i].Mssg)
+					client.Result()
+				} else if BidResponse[i].Response == "Exception" {
+					fmt.Printf(BidResponse[i].Mssg)
+					client.Bid()
+				}
 			}
 		}
 	}
@@ -122,7 +126,7 @@ func (client *client) Result() {
 	for i := 0; i < len(client.aucClients); i++ {
 		var err error
 
-		Done, err := client.aucClients[i].Update(context.Background(), &Auction.UpdateRequest{ClientId: int32(client.clientid), AucDone: false})
+		Done, err := client.aucClients[i].Done(context.Background(), &Auction.DoneRequest{ClientId: int32(client.clientid)})
 		if err != nil {
 			log.Fatalf("Failed to call AuctionService :: %v, %v", err, Done)
 
