@@ -30,6 +30,7 @@ func main() {
 
 }
 
+//
 //sets name for client and status
 func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 
