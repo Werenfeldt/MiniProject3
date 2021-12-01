@@ -1,0 +1,54 @@
+2021/12/01 16:02:20 Listening @ : 8080
+2021/12/01 16:02:27 Listening @ : 5000
+2021/12/01 16:02:47 Server: 1. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 5 
+2021/12/01 16:02:47 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 5 
+2021/12/01 16:02:47 Server: 1. 
+ The current highest bid is: 5
+2021/12/01 16:02:47 Server: 2. 
+ The current highest bid is: 5
+2021/12/01 16:02:54 Server: 1. 
+ Bid is successful. 
+ Bid recieved from: 1. 
+ Bid is: 20 
+2021/12/01 16:02:54 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 1. 
+ Bid is: 20 
+2021/12/01 16:02:54 Server: 1. 
+ The current highest bid is: 20
+2021/12/01 16:02:54 Server: 2. 
+ The current highest bid is: 20
+2021/12/01 16:03:00 Server: 1. 
+ Bid is unsuccessful. 
+ Bid recieved from: 2. 
+ Bid is: 15 and needs to be higher than: 20 
+2021/12/01 16:03:00 Server: 2. 
+ Bid is unsuccessful. 
+ Bid recieved from: 2. 
+ Bid is: 15 and needs to be higher than: 20 
+2021/12/01 16:03:15 Server: 1. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 50 
+2021/12/01 16:03:15 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 50 
+2021/12/01 16:03:15 Server: 1. 
+ The current highest bid is: 50
+2021/12/01 16:03:15 Server: 2. 
+ The current highest bid is: 50
+2021/12/01 16:03:23 Server: 1. 
+ The Auction is done. The winner is 2 with the highest bid: 50
+2021/12/01 16:03:23 Server: 2. 
+ The Auction is done. The winner is 2 with the highest bid: 50
+2021/12/01 16:03:34 Server: 1. 
+ The Auction is done. The winner is 2 with the highest bid: 50
+2021/12/01 16:03:34 Server: 2. 
+ The Auction is done. The winner is 2 with the highest bid: 50

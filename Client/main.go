@@ -20,6 +20,8 @@ func main() {
 	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
 	conn2, err := grpc.Dial("localhost:5000", grpc.WithInsecure())
 
+	
+
 	if err != nil {
 		log.Fatalf("Failed to connect to gRPC server :: %v", err)
 	}
@@ -38,7 +40,7 @@ func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 	fmt.Printf("Enter your id : ")
 	var input int
 	_, err := fmt.Scan(&input)
-	fmt.Printf("Your id is: %v", input)
+	fmt.Printf("Your id is: %v \n", input)
 	if err != nil {
 		log.Fatalf(" Failed to read from console :: %v", err)
 	}
@@ -48,11 +50,6 @@ func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 	//call ChatService to create a stream
 	clientObj := client{clientid: int64(input), aucClients: tmp}
 
-	for _, v := range clientObj.aucClients {
-		fmt.Println("clients", v)
-
-	}
-
 	clientObj.Bid()
 
 }
@@ -60,15 +57,16 @@ func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
 type client struct {
 	clientid   int64
 	aucClients []Auction.AuctionClient
+	bidresponse bidresponse
 	mu         sync.Mutex
 }
 
 type bidresponse struct{
-	response [2]*Auction.BidResponse
+	response []*Auction.BidResponse
 	mu         sync.Mutex
 }
 
-var BidResponse = bidresponse{} 
+var BidResponse = bidresponse{response: make([]*Auction.BidResponse, 2)} 
 
 func (client *client) Bid() {
 	fmt.Printf("Enter your bid : ")
@@ -80,21 +78,29 @@ func (client *client) Bid() {
 
 	MyLastBid = bid
 
-	
+	var deadServer int
+	var anydeadServers bool
 
 	for i := 0; i < len(client.aucClients); i++ {
 
 		BidResponse.response[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
-
-		if BidResponse.response[i].AucDone{
-			AucDone = true
-		}
+		
 		if err != nil {
-			client.remove(i)
+			deadServer = i
+			anydeadServers = true
 		}
-
 	}
 
+	if anydeadServers {
+		BidResponse.mu.Lock()
+		client.mu.Lock()
+		client.remove(deadServer)
+	}
+
+	if BidResponse.response[0].AucDone{
+		AucDone = true
+	}
+	
 	if AucDone {
 		BidResponse.mu.Lock()
 		AucDonefunc(BidResponse.response[0])
@@ -115,7 +121,6 @@ func (client *client) Bid() {
 			}
 		}
 	}
-
 }
 
 func (client *client) Result() {
@@ -128,32 +133,47 @@ func (client *client) Result() {
 		HighestBidtmp, err = client.aucClients[i].Result(context.Background(), &Auction.GetResult{Id: int32(client.clientid), GetResult: "What is the result"})
 
 		if err != nil {
-			log.Fatalf("Failed to call AuctionService :: %v", err)
+			log.Fatalf("Result: Failed to call AuctionService :: %v", err)
 
 		}
+
+		err = nil
 	}
 
 	fmt.Printf("The highest bid at the moment is: %v \n", HighestBidtmp.Result)
 
 	HighestBid = HighestBidtmp.Result
 
-	for i := 0; i < len(client.aucClients); i++ {
-		var err error
+	client.Done()
 
+}
+
+func (client *client) Done() {
+
+	for i := 0; i < len(client.aucClients); i++ {
+	
 		Done, err := client.aucClients[i].Done(context.Background(), &Auction.DoneRequest{ClientId: int32(client.clientid)})
 		if err != nil {
-			log.Fatalf("Failed to call AuctionService :: %v, %v", err, Done)
-
+			log.Printf("Server is down", err, Done)
+	
 		}
-	}
-	BidResponse.mu.Unlock()
 
+		err = nil
+	}
+
+	BidResponse.mu.Unlock()
+	
 	client.Bid()
 }
 
 func (client *client) remove(i int) {
 	client.aucClients[i] = client.aucClients[len(client.aucClients)-1]
+	BidResponse.response[i] = BidResponse.response[len(BidResponse.response)-1]
 	client.aucClients = client.aucClients[:len(client.aucClients)-1]
+	BidResponse.response = BidResponse.response[:len(BidResponse.response)-1]
+
+	client.mu.Unlock()
+	BidResponse.mu.Unlock()
 	return
 }
 

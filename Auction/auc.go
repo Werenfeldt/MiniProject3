@@ -3,7 +3,6 @@ package Auction
 import (
 	pb "MiniProject3/Auction/proto"
 	context "context"
-	"fmt"
 	"log"
 	"strconv"
 	"sync"
@@ -24,41 +23,39 @@ type Auctionserver struct {
 var AuctionDone bool
 
 func (c *Auctionserver) Bid(ctx context.Context, in *pb.BidRequest) (*pb.BidResponse, error) {
-
+	
 	if AucObject.AuctionHighestBid == 0 {
 		go timer()
 	}
-
-	fmt.Printf("Server Id: %v \n Request from Client: %v \n", c.Id, in.Id)
+	
+	AucObject.mu.Lock()
 	if !AuctionDone {
-		AucObject.mu.Lock()
 		if in.Bid > AucObject.AuctionHighestBid {
 			AucObject.AuctionHighestBid = in.Bid
 			AucObject.clientId = in.Id
-			log.Printf("Bid is successful. \n Bid recieved from: %v. \n Bid is: %v \n", AucObject.clientId, AucObject.AuctionHighestBid)
+			log.Printf("Server: %v. \n Bid is successful. \n Bid recieved from: %v. \n Bid is: %v \n", c.Id, AucObject.clientId, AucObject.AuctionHighestBid)
 			mssg := "Your bid has been recieved \n"
 			return &pb.BidResponse{Response: "Success", Mssg: mssg, AucDone: AuctionDone}, nil
 		} else {
 			AucObject.mu.Unlock()
-			log.Printf("Bid is unsuccessful. \n Bid recieved from: %v. \n Bid is: %v and needs to be higher than: %v \n", in.Id, in.Bid, AucObject.AuctionHighestBid)
+			log.Printf("Server: %v. \n Bid is unsuccessful. \n Bid recieved from: %v. \n Bid is: %v and needs to be higher than: %v \n", c.Id, in.Id, in.Bid, AucObject.AuctionHighestBid)
 			mssg := "Your bid needs to be higher than:" + strconv.Itoa(int(AucObject.AuctionHighestBid)) + "\n"
 
 			return &pb.BidResponse{Response: "Exception", Mssg: mssg, AucDone: AuctionDone}, nil
 		}
 	} else {
-		log.Printf("The Auction is done. The winner is %v with the highest bid: %v", AucObject.clientId, AucObject.AuctionHighestBid)
+		AucObject.mu.Unlock()
+		log.Printf("Server: %v. \n The Auction is done. The winner is %v with the highest bid: %v", c.Id, AucObject.clientId, AucObject.AuctionHighestBid)
 		mssg := "The Auction is done. The highest bid was: " + strconv.Itoa(int(AucObject.AuctionHighestBid)) + " and the winner was: " + strconv.Itoa(int(AucObject.clientId)) + "\n"
 		return &pb.BidResponse{Response: "Fail", Mssg: mssg, AucDone: AuctionDone}, nil
 	}
-	//AucObject.AuctionHighestBid
+
 
 }
 
 func (c *Auctionserver) Result(ctx context.Context, in *pb.GetResult) (*pb.HighestResult, error) {
 
-	//c.AddClient(client{clientId: in.Id})
-	//fmt.Printf("Server Id: %v \n Request from Client: %v", c.Id, in.Id)
-	log.Printf("The current highest bid is: %v", AucObject.AuctionHighestBid)
+	log.Printf("Server: %v. \n The current highest bid is: %v", c.Id, AucObject.AuctionHighestBid)
 	return &pb.HighestResult{Result: AucObject.AuctionHighestBid}, nil
 }
 
@@ -69,14 +66,8 @@ func (c *Auctionserver) Done(ctx context.Context, in *pb.DoneRequest) (*pb.Empty
 }
 
 func timer() {
-
 	time.Sleep(30 * time.Second)
-
 	AuctionDone = true
-
-	// Do heavy work
 }
-
-//https://yourbasic.org/golang/time-reset-wait-stop-timeout-cancel-interval/
 
 var AucObject = AuctionItem{}

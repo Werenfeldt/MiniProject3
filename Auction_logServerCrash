@@ -1,0 +1,51 @@
+2021/12/01 16:05:28 Listening @ : 8080
+2021/12/01 16:05:33 Listening @ : 5000
+2021/12/01 16:05:44 Server: 1. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 5 
+2021/12/01 16:05:44 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 5 
+2021/12/01 16:05:44 Server: 1. 
+ The current highest bid is: 5
+2021/12/01 16:05:44 Server: 2. 
+ The current highest bid is: 5
+2021/12/01 16:05:47 Server: 1. 
+ Bid is successful. 
+ Bid recieved from: 1. 
+ Bid is: 10 
+2021/12/01 16:05:47 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 1. 
+ Bid is: 10 
+2021/12/01 16:05:47 Server: 1. 
+ The current highest bid is: 10
+2021/12/01 16:05:47 Server: 2. 
+ The current highest bid is: 10
+2021/12/01 16:05:50 The Server: 1 has been: interrupt. The server is dead.
+2021/12/01 16:05:55 Server: 2. 
+ Bid is unsuccessful. 
+ Bid recieved from: 2. 
+ Bid is: 7 and needs to be higher than: 10 
+2021/12/01 16:05:59 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 2. 
+ Bid is: 12 
+2021/12/01 16:05:59 Server: 2. 
+ The current highest bid is: 12
+2021/12/01 16:06:02 Server: 2. 
+ Bid is unsuccessful. 
+ Bid recieved from: 1. 
+ Bid is: 11 and needs to be higher than: 12 
+2021/12/01 16:06:05 Server: 2. 
+ Bid is successful. 
+ Bid recieved from: 1. 
+ Bid is: 20 
+2021/12/01 16:06:05 Server: 2. 
+ The current highest bid is: 20
+2021/12/01 16:06:19 Server: 2. 
+ The Auction is done. The winner is 1 with the highest bid: 20
+2021/12/01 16:06:25 Server: 2. 
+ The Auction is done. The winner is 1 with the highest bid: 20
