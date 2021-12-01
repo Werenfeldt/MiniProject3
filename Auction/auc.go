@@ -70,7 +70,7 @@ func (c *Auctionserver) Done(ctx context.Context, in *pb.DoneRequest) (*pb.Empty
 
 func timer() {
 
-	time.Sleep(60 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	AuctionDone = true
 

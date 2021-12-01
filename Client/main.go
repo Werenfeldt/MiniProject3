@@ -63,6 +63,13 @@ type client struct {
 	mu         sync.Mutex
 }
 
+type bidresponse struct{
+	response [2]*Auction.BidResponse
+	mu         sync.Mutex
+}
+
+var BidResponse = bidresponse{} 
+
 func (client *client) Bid() {
 	fmt.Printf("Enter your bid : ")
 	var bid int32
@@ -73,30 +80,37 @@ func (client *client) Bid() {
 
 	MyLastBid = bid
 
-	var BidResponse [2]*Auction.BidResponse
+	
 
 	for i := 0; i < len(client.aucClients); i++ {
 
-		BidResponse[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
+		BidResponse.response[i], err = client.aucClients[i].Bid(context.Background(), &Auction.BidRequest{Id: int32(client.clientid), Bid: MyLastBid})
 
+		if BidResponse.response[i].AucDone{
+			AucDone = true
+		}
 		if err != nil {
 			client.remove(i)
 		}
 
 	}
 
-	if BidResponse[0].AucDone {
-		fmt.Printf(BidResponse[0].Mssg)
-		return
+	if AucDone {
+		BidResponse.mu.Lock()
+		AucDonefunc(BidResponse.response[0])
 	} else {
 		for i := 0; i < len(client.aucClients); i++ {
-			if BidResponse[i] != nil {
-				if BidResponse[i].Response == "Success" {
-					fmt.Printf(BidResponse[i].Mssg)
+			if BidResponse.response[i] != nil {
+				BidResponse.mu.Lock()
+				if BidResponse.response[i].Response == "Success" {
+					fmt.Printf(BidResponse.response[i].Mssg)
 					client.Result()
-				} else if BidResponse[i].Response == "Exception" {
-					fmt.Printf(BidResponse[i].Mssg)
+				} else if BidResponse.response[i].Response == "Exception" {
+					fmt.Printf(BidResponse.response[i].Mssg)
+					BidResponse.mu.Unlock()
 					client.Bid()
+				} else {
+					BidResponse.mu.Unlock()
 				}
 			}
 		}
@@ -132,6 +146,7 @@ func (client *client) Result() {
 
 		}
 	}
+	BidResponse.mu.Unlock()
 
 	client.Bid()
 }
@@ -140,4 +155,9 @@ func (client *client) remove(i int) {
 	client.aucClients[i] = client.aucClients[len(client.aucClients)-1]
 	client.aucClients = client.aucClients[:len(client.aucClients)-1]
 	return
+}
+
+func AucDonefunc(response *Auction.BidResponse){
+	fmt.Printf(response.Mssg)
+	BidResponse.mu.Unlock()
 }
