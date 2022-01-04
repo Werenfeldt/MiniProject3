@@ -15,44 +15,43 @@ var HighestBid int32
 var MyLastBid int32
 var AucDone bool
 
+//!Needed!
 func main() {
-	//connect to grpc server
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
-	conn2, err := grpc.Dial("localhost:5000", grpc.WithInsecure())
 
-	
-
-	if err != nil {
-		log.Fatalf("Failed to connect to gRPC server :: %v", err)
-	}
-	defer conn.Close()
-	defer conn2.Close()
-
-	clientConfig(conn, conn2)
-
-}
-
-//
-//sets name for client and status
-func clientConfig(conn *grpc.ClientConn, conn2 *grpc.ClientConn) {
-
+	//Set id for client
 	fmt.Printf("Welcome to The Auction! \n")
 	fmt.Printf("Enter your id : ")
+
 	var input int
 	_, err := fmt.Scan(&input)
+
 	fmt.Printf("Your id is: %v \n", input)
 	if err != nil {
 		log.Fatalf(" Failed to read from console :: %v", err)
 	}
-	var tmp []Auction.AuctionClient
-	tmp = append(tmp, Auction.NewAuctionClient(conn), Auction.NewAuctionClient(conn2))
 
-	//call ChatService to create a stream
+	//Dialing three servers !Needed!
+	var tmp []Auction.AuctionClient
+
+	for i := 5000; i < 5003; i++ {
+		address := fmt.Sprintf(":%v", i)
+		log.Printf("Dialing %v", address)
+		conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+		if err != nil {
+			log.Fatalf("Did not connect: %v", err)
+		}
+		//defer conn.Close()
+		tmp = append(tmp, Auction.NewAuctionClient(conn))
+	}
+	
+	//Make client objects which contains all connections to the three servers. 
 	clientObj := client{clientid: int64(input), aucClients: tmp}
 
-	clientObj.Bid()
+	BidResponse = bidresponse{response: make([]*Auction.BidResponse, len(clientObj.aucClients))} 
 
+	clientObj.Bid()
 }
+
 
 type client struct {
 	clientid   int64
@@ -66,7 +65,7 @@ type bidresponse struct{
 	mu         sync.Mutex
 }
 
-var BidResponse = bidresponse{response: make([]*Auction.BidResponse, 2)} 
+var BidResponse bidresponse
 
 func (client *client) Bid() {
 	fmt.Printf("Enter your bid : ")
@@ -91,6 +90,7 @@ func (client *client) Bid() {
 		}
 	}
 
+	//Removes if server is dead !Needed!
 	if anydeadServers {
 		BidResponse.mu.Lock()
 		client.mu.Lock()
@@ -166,6 +166,8 @@ func (client *client) Done() {
 	client.Bid()
 }
 
+
+//Removes dead servers !Needed!
 func (client *client) remove(i int) {
 	client.aucClients[i] = client.aucClients[len(client.aucClients)-1]
 	BidResponse.response[i] = BidResponse.response[len(BidResponse.response)-1]

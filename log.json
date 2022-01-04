@@ -1,0 +1,15 @@
+server2_1  | 2022/01/03 14:22:41 Listening on port :5000
+server0_1  | 2022/01/03 14:22:41 Listening on port :5000
+server1_1  | 2022/01/03 14:22:41 Listening on port :5000
+server0_1  | 2022/01/03 14:22:55 Bid is successful. 
+server0_1  |  Bid recieved from: 1. 
+server0_1  |  Bid is: 3 
+server1_1  | 2022/01/03 14:22:55 Bid is successful. 
+server1_1  |  Bid recieved from: 1. 
+server1_1  |  Bid is: 3 
+server2_1  | 2022/01/03 14:22:55 Bid is successful. 
+server2_1  |  Bid recieved from: 1. 
+server2_1  |  Bid is: 3 
+server0_1  | 2022/01/03 14:22:55 The current highest bid is: 3
+server1_1  | 2022/01/03 14:22:55 The current highest bid is: 3
+server2_1  | 2022/01/03 14:22:55 The current highest bid is: 3
