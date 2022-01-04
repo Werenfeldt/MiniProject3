@@ -1,6 +1,20 @@
 # MiniProject3
 
-## How to run the servers
+## How to run the servers new
+1. Run the following commands:
+```
+ docker build -t auction --no-cache .
+```
+```
+ docker-compose build
+ ```
+
+ ```
+ docker compose up
+ ```
+
+## How to run the servers old
+
 1. Open two terminals and navigate to the Server folder. 
 2. In the first terminal write the following: 
 ```
